@@ -1,0 +1,28 @@
+# Tự build APK trên GitHub (không cần cài Android Studio):
+# đẩy thư mục này lên một repo GitHub -> tab Actions -> "Build APK" -> tải file LuckyTide-apk ở mục Artifacts.
+name: Build APK
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      server_url:
+        description: "Default server address shown on first launch (optional)"
+        required: false
+        default: "https://"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build release APK
+        run: chmod +x gradlew && ./gradlew assembleRelease -PserverUrl="${{ github.event.inputs.server_url || 'https://' }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LuckyTide-apk
+          path: app/build/outputs/apk/release/*.apk
