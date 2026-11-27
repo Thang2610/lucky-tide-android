@@ -48,18 +48,33 @@ class MainActivity : AppCompatActivity() {
                 val w = web
                 when {
                     customView != null -> exitFullscreenView()
-                    w != null && w.canGoBack() -> w.goBack()
-                    else -> AlertDialog.Builder(this@MainActivity)
-                        .setMessage("Exit Lucky Tide?")
-                        .setPositiveButton("Exit") { _, _ -> finish() }
-                        .setNeutralButton("Change server") { _, _ -> showSetup(null) }
-                        .setNegativeButton("Cancel", null).show()
+                    // trang web tự xử lý Back bằng hộp thoại trong game (đúng vị trí, đúng giao diện như app game khác)
+                    w != null -> w.evaluateJavascript("(window.ltBack ? ltBack() : 'none')") { r ->
+                        if (r?.contains("handled") == true) return@evaluateJavascript
+                        if (w.canGoBack()) w.goBack() else nativeExitDialog()
+                    }
+                    else -> nativeExitDialog()
                 }
             }
         })
 
         val url = prefs.getString("server_url", null)
         if (url.isNullOrBlank()) showSetup(null) else openPortal(url)
+    }
+
+    private fun nativeExitDialog() {
+        AlertDialog.Builder(this@MainActivity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            .setTitle("Exit Lucky Tide?")
+            .setPositiveButton("Exit") { _, _ -> finish() }
+            .setNeutralButton("Change server") { _, _ -> showSetup(null) }
+            .setNegativeButton("Cancel", null).show().also { d -> d.window?.decorView?.let { hideBarsOn(it) } }
+    }
+    private fun hideBarsOn(v: View) { WindowInsetsControllerCompat(window, v).hide(WindowInsetsCompat.Type.systemBars()) }
+
+    /** Cầu nối nhỏ cho trang web: nút Exit / Change server trong hộp thoại kiểu app. */
+    inner class NativeBridge {
+        @JavascriptInterface fun exit() { runOnUiThread { finish() } }
+        @JavascriptInterface fun changeServer() { runOnUiThread { showSetup(null) } }
     }
 
     // ---------------- màn hình nhập địa chỉ server ----------------
@@ -137,6 +152,7 @@ class MainActivity : AppCompatActivity() {
             setGeolocationEnabled(false)
             userAgentString = "$userAgentString LuckyTideApp/1.0"
         }
+        w.addJavascriptInterface(NativeBridge(), "LuckyTideNative")
         CookieManager.getInstance().setAcceptCookie(true)
         w.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, req: WebResourceRequest): Boolean {

@@ -1,2 +1,4 @@
 -keep class com.luckytide.app.** { *; }
 -dontwarn org.jetbrains.annotations.**
+-keepattributes JavascriptInterface
+-keepclassmembers class * { @android.webkit.JavascriptInterface <methods>; }
