@@ -1,0 +1,2 @@
+-keep class com.luckytide.app.** { *; }
+-dontwarn org.jetbrains.annotations.**

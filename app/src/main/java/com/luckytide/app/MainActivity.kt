@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.view.Gravity
@@ -118,6 +119,10 @@ class MainActivity : AppCompatActivity() {
         val w = WebView(this)
         web = w
         w.setBackgroundColor(Color.BLACK)
+        w.setLayerType(View.LAYER_TYPE_HARDWARE, null)                                   // vẽ WebGL bằng GPU
+        if (Build.VERSION.SDK_INT >= 26) w.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false)   // ưu tiên tiến trình vẽ game
+        w.isVerticalScrollBarEnabled = false; w.isHorizontalScrollBarEnabled = false
+        w.overScrollMode = View.OVER_SCROLL_NEVER
         with(w.settings) {
             javaScriptEnabled = true
             domStorageEnabled = true                       // lưu đăng nhập (localStorage)
@@ -127,7 +132,9 @@ class MainActivity : AppCompatActivity() {
             setSupportZoom(false)
             builtInZoomControls = false
             mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-            cacheMode = WebSettings.LOAD_DEFAULT
+            cacheMode = WebSettings.LOAD_DEFAULT                // giữ cache -> lần sau vào game nhanh
+            offscreenPreRaster = true
+            setGeolocationEnabled(false)
             userAgentString = "$userAgentString LuckyTideApp/1.0"
         }
         CookieManager.getInstance().setAcceptCookie(true)

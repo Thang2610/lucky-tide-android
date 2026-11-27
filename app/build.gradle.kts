@@ -15,8 +15,8 @@ android {
         applicationId = "com.luckytide.app"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
         buildConfigField("String", "SERVER_URL", "\"$serverUrl\"")
     }
 
@@ -35,7 +35,9 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true                          // R8: thu gọn + tối ưu mã -> APK nhẹ, mở nhanh hơn
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             val rel = signingConfigs.getByName("release")
             signingConfig = if (rel.storeFile != null) rel else signingConfigs.getByName("debug")
         }
